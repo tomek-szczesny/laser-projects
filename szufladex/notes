@@ -1,0 +1,24 @@
+Dla wersji 2.0
+
+- Całość węższa o 1mm
+- Zapasy na boki +1mm per szufladka?
+- Dziury na zęby wyższe: 2.9mm -> 3.1mm?
+- Centralna przegródko-podpórka, kilka opcji
+	(Może  wystarczy tylko z przodu)
+	(W sumie to 2*hs = dh)
+	- fs, hs, hs, hs, hs
+	- fs, fs, hs, hs, hs
+	- fs, fs, fs, hs, hs
+	- fs, fs, fs, fs, hs
+- Większe i mniej zębów na obudowie
+- Opcjonalne przegródki, również w dh 
+
+- Projekty ze wspólną linią cięcia gdzie się da
+- Zoptymalizowane programy (kolejność)
+
+- Nowy laser
+
+W wersji 2.1:
+- Doły frontów i backów mniejsze o 0.1mm (bo trzeba unosić niektóre by się zamknęły)
+- Symetryczne podpórki centralne (zrobiłem tylko half size)
+- Panele o standardowych wymiarach: 400x354

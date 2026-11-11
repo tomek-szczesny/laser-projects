@@ -1,0 +1,62 @@
+Ramka, zewnętrzne wymiary:
+335 x 336 x 390
+Wysokość unitu: 64.8mm
+Wysokość podwójnego unitu: 132.6mm
+Szerokość unitu: 329mm
+Szerokość hs:    163mm
+Głębokość unitu: 387mm
+
+Szufladki mają:
+- 1mm luzu wszerz
+- 1mm luzu wysokości
+- 0mm luzu długości
+
+fs:   328 x 63.8  x 387
+hs:   162 x 63.8  x 387
+fsdh: 328 x 131.6 x 387
+hsdh: 162 x 131.6 x 387
+
+Wewnątrz:
+Wszerz 156 / 322
+Wzdłuz: 381
+Wysokość: 57.8 / 125.6
+
+I teraz przegródki:
+- 0 luzu
+- wysokość sh: 63.8 - 6 - 5 = 52.8
+- hs = 156, dzielone na 2
+- fs = 322, dzielone na 2, 3 lub 4?
+- hmmmmmmmm
+
+---------------
+Boxes.py ustawienia:
+# Finger Joints:
+	- finger: 3
+	- space: 3
+	- width: 1.1
+
+---------------
+
+Arkusz sklejki 1525 x 1525mm można podzielić:
+8x 397x338
+4x 380x338
+4x 338x338
+2x 397x161
+1x 380x161
+1x 338x161
+
+Albo:
+12x 394x334
+4x  334x334
+3x  177x394
+1x  177x334
+
+Albo:
+9x 394x394
+6x 394x334
+1x 334x334
+
+
+
+Arkusz HDF 2070x1200 :O
+18x 398x342
