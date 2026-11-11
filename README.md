@@ -9,6 +9,7 @@ This repository includes C (Cairo-based) vector generators, SVG/Boxes.py-based d
 - `common/` — shared code used by C-based projects
   - `vector_plot.h` — lightweight Cairo SVG/PDF plotting helpers (`plot_t`, `create_svg`, `vp_*` drawing primitives)
 - `smaczex/` — parametric generator for a pouch for dog snacks (C)
+- `pindelex/` — legacy design of smaczex (C)
 - `bateriex/` — parametric battery organizer board generator (C)
 - `nakladex/` — parametric generator of cases for clip-on sunglasses (and other flat things) (C)
 - `sock-jig/` — parametric sock-jig outline generator (C)
