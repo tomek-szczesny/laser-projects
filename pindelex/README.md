@@ -2,9 +2,13 @@
 
 Legacy design of [smaczex](../smaczex/) (pouch for dog snacks).
 
-## Contents
+## Versions
 
-- `pindelex.c` — C (Cairo) generator producing SVG parts
-- `makefile` — builds and runs the generator, then processes SVG outputs
-- `process.sh` — SVG-to-G-code post-processing pipeline using `la` tools
-- `LICENSE`
+- `v1.1/`, `v1.2/` — earlier versions using Inkscape-drawn SVG files as sources (with FreeCAD project files and processed outputs as preserved)
+- `v1.3/` — C (Cairo) generator version
+
+Additional early Inkscape SVG drafts/sources are kept in this directory.
+
+## Notes
+
+- `v1.1/process.sh` and `v1.2/process.sh` have been updated to use [la suite](https://github.com/tomek-szczesny/la) tools from `PATH` (bundled `la_*` binaries removed).

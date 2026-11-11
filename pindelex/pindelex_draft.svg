@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="170.22227mm"
+   height="300.22226mm"
+   viewBox="0 0 170.22227 300.22226"
+   version="1.1"
+   id="svg1"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs1" />
+  <g
+     id="layer1"
+     transform="translate(-19.86771,-9.8677087)">
+    <path
+       style="fill:none;stroke:#000000;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="M 120,289.99999 20,290 l 3e-6,-79.99999 c 0,-20 -3e-6,-20 19.999998,-20 L 100,189.99999 c 20,-1e-5 20,0 20,20.00002 z"
+       id="path8" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="M 20,140.00001 V 29.999999 C 20,9.9999997 50.000001,9.9999997 60.000001,9.9999997 h 20.000001 c 10,0 39.999998,0 39.999998,19.9999993 V 140.00001 c 0,20 0,20 -20,19.99998 l -59.999999,2e-5 c -20.000001,-2e-5 -20,0 -20.000001,-20 z"
+       id="path1" />
+    <ellipse
+       style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:0.18902;stroke-dasharray:none;stroke-opacity:1"
+       id="path7"
+       cx="70"
+       cy="70"
+       rx="2.0054901"
+       ry="2.0054903" />
+    <circle
+       style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:0.189435;stroke-dasharray:none;stroke-opacity:1"
+       id="path7-3"
+       cx="70"
+       cy="100"
+       r="2.0052826" />
+    <rect
+       style="fill:none;stroke:#000000;stroke-width:0.191694;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-dashoffset:0.907087;stroke-opacity:1"
+       id="rect7"
+       width="20.008307"
+       height="4.008306"
+       x="59.995846"
+       y="55.995846" />
+    <rect
+       style="fill:none;stroke:#000000;stroke-width:0.18;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-dashoffset:0.907087;stroke-opacity:1"
+       id="rect8"
+       width="50"
+       height="300"
+       x="140"
+       y="10" />
+  </g>
+</svg>

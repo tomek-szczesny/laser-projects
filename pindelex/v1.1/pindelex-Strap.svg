@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="12.240000000000009mm" height="122.15250648917666mm" viewBox="0 0 12.240000000000009 122.15250648917666" xmlns="http://www.w3.org/2000/svg" version="1.1">
+<g id="Block" transform="translate(211.120000,51.076253) scale(1,-1)">
+<circle cx="-205.0" cy="-35.0" r="2.0" stroke="#191919" stroke-width="0.7 px" style="stroke-width:0.7;stroke-miterlimit:4;stroke-dasharray:none;stroke-linecap:square;fill:#727980"/>
+<circle cx="-205.0" cy="-65.0" r="2.0" stroke="#191919" stroke-width="0.7 px" style="stroke-width:0.7;stroke-miterlimit:4;stroke-dasharray:none;stroke-linecap:square;fill:#727980"/>
+<circle cx="-205.0" cy="45.0" r="2.0" stroke="#191919" stroke-width="0.7 px" style="stroke-width:0.7;stroke-miterlimit:4;stroke-dasharray:none;stroke-linecap:square;fill:#727980"/>
+<circle cx="-205.0" cy="15.0" r="2.0" stroke="#191919" stroke-width="0.7 px" style="stroke-width:0.7;stroke-miterlimit:4;stroke-dasharray:none;stroke-linecap:square;fill:#727980"/>
+<path id="Block_nwe0000"  d="M -199.0 45.00000000000001 A 6 6 0 0 1 -211 45" stroke="#191919" stroke-width="0.7 px" style="stroke-width:0.7;stroke-miterlimit:4;stroke-dasharray:none;stroke-linecap:square;fill:none;fill-opacity:1.0;fill-rule: evenodd"/>
+<path id="Block_nwe0001"  d="M -211.0 -65.0 A 6 6 0 0 1 -199 -65" stroke="#191919" stroke-width="0.7 px" style="stroke-width:0.7;stroke-miterlimit:4;stroke-dasharray:none;stroke-linecap:square;fill:none;fill-opacity:1.0;fill-rule: evenodd"/>
+<path id="Block_nwe0002"  d="M -199.0 -65.0 L -199.0 45.0 " stroke="#191919" stroke-width="0.7 px" style="stroke-width:0.7;stroke-miterlimit:4;stroke-dasharray:none;stroke-linecap:square;fill:none;fill-opacity:1.0;fill-rule: evenodd"/>
+<path id="Block_nwe0003"  d="M -211.0 -65.0 L -211.0 45.0 " stroke="#191919" stroke-width="0.7 px" style="stroke-width:0.7;stroke-miterlimit:4;stroke-dasharray:none;stroke-linecap:square;fill:none;fill-opacity:1.0;fill-rule: evenodd"/>
+<title>b'Strap'</title>
+</g>
+</svg>

@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include "../common/vector_plot.h"
+#include "../../common/vector_plot.h"
 
 void print_usage(const char *program_name) {
     fprintf(stderr, "Usage: %s [-w WIDTH] [-h HEIGHT]\n", program_name);
