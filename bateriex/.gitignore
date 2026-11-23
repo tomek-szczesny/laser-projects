@@ -1,0 +1,7 @@
+# Generated outputs
+*.svg
+*.gcode
+*.preview.pdf
+
+# Compiled binary
+bateriex
