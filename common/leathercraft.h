@@ -1,6 +1,42 @@
 #ifndef LEATHERCRAFT_H
 #define LEATHERCRAFT_H
 
+/*
+ * leathercraft.h - Leathercraft/stitched-part helpers on top of vector_plot.h.
+ *
+ * Provides pitch-matched stitch holes and bend-corner helpers for laser-cut
+ * leather/fabric parts. Coordinates follow vector_plot.h (mm). Angles are in
+ * degrees, 0=+x, positive clockwise (SVG/Cairo y-down).
+ *
+ * Typical workflow (stitch a rounded panel, then make a matching bend strip):
+ *
+ *   #include "../common/leathercraft.h"
+ *
+ *   stitch_style_t S = stitch_style(1.4, 4.0, 4.0); // hole_d, pitch, inset
+ *   plot_t p = create_svg("part.svg", 132, 112);
+ *
+ *   vp_new_path(&p, 0, 0);
+ *   lc_line_stitched(&p, S, true, false, 0, 84, true);         // edge + holes
+ *   bend_corner_t bc = lc_arc_stitched(&p, S, false, false,    // arc + holes
+ *                                      28, 112, 28, true, false);
+ *   lc_line_stitched(&p, S, false, true, 132, 84, true);
+ *   vp_close_path(&p);
+ *   close_plot(&p);
+ *
+ *   // Side strip: lc_bend_strip consumes bc so hole count/spacing matches.
+ *   plot_t s = create_svg("side.svg", 360, 50);
+ *   vp_new_path(&s, 0, 0);
+ *   vp_line(&s, 84, 0);
+ *   lc_bend_strip(&s, &bc, 0.0, false); // azimuth 0=+x, material below
+ *   vp_stroke(&s);
+ *   close_plot(&s);
+ *
+ * Notes:
+ * - lc_* helpers preserve the current Cairo path across hole drawing.
+ * - incl_start/incl_end control endpoint ownership when joining segments.
+ * - material_left: when facing travel direction, material is on the left.
+ */
+
 #include <stdbool.h>
 #include <math.h>
 #include "vector_plot.h"
@@ -9,31 +45,41 @@
 #define M_PI 3.14159265358979323846
 #endif
 
+/* Stitch style used by stitch and bend helpers.
+ * hole_d: hole diameter (mm). pitch: target distance between holes (mm).
+ * inset:  distance from edge to stitch line (mm). */
 typedef struct {
-    float hole_d;   // hole diameter, mm
-    float pitch;    // target stitch pitch along stitch line, mm
-    float inset;    // stitch inset from edge, mm
+    float hole_d;
+    float pitch;
+    float inset;
 } stitch_style_t;
 
+/* Convenience constructor for stitch_style_t. */
 static inline stitch_style_t stitch_style(float hole_d, float pitch, float inset) {
     return (stitch_style_t){hole_d, pitch, inset};
 }
 
+/* Computed bend-corner geometry. Returned by lc_arc_stitched and consumed by
+ * lc_bend_strip so panel corner and strip bend have matching hole counts.
+ *
+ * p_o: flat strip spacing per interval (outer arc / n).
+ * p_s: stitch-line spacing per interval (stitch radius / n).
+ * co1: half flat tooth top; co2: notch ramp x. Tooth depth ts is 1.5*inset. */
 typedef struct {
     float cx, cy;
-    float external_r;       // R
-    float a0_deg, a1_deg;   // center angles, degrees, 0=+x, positive clockwise
-    float theta_deg;        // abs(sweep), expected 0 < theta < 180
+    float external_r;
+    float a0_deg, a1_deg;   /* center angles, degrees, 0=+x, positive clockwise */
+    float theta_deg;        /* abs(sweep), normally 0 < theta < 180 */
 
     stitch_style_t style;
-    float stitch_r;         // R - style.inset
+    float stitch_r;         /* external_r - style.inset */
 
-    int n;                  // intervals, >= 1
-    int holes;              // n + 1
-    float p_o;              // R * theta / n, outer/flat section spacing
-    float p_s;              // stitch_r * theta / n, actual stitch pitch
-    float co1;              // half flat tooth top
-    float co2;              // ramp x
+    int n;                  /* intervals, >= 1 */
+    int holes;              /* n + 1 */
+    float p_o;
+    float p_s;
+    float co1;
+    float co2;
 } bend_corner_t;
 
 static inline float lc_deg_to_rad(float deg) {
@@ -44,20 +90,23 @@ static inline float lc_rad_to_deg(float rad) {
     return rad * 180.0f / (float)M_PI;
 }
 
+/* Direction vector for angle_deg (0=+x, positive clockwise, y-down). */
 static inline void lc_dir(float angle_deg, float *dx, float *dy) {
     float a = lc_deg_to_rad(angle_deg);
     *dx = cosf(a);
-    *dy = sinf(a); // y-down, positive clockwise
+    *dy = sinf(a);
 }
 
+/* Left-hand normal for angle_deg in y-down visual coordinates. */
 static inline void lc_left_normal(float angle_deg, float *dx, float *dy) {
     float a = lc_deg_to_rad(angle_deg);
-    // left of forward(cos,sin) in y-down visual coords is (sin,-cos)
     *dx = sinf(a);
     *dy = -cosf(a);
 }
 
-// Returns number of holes placed.
+/* Draw pitch-matched stitch holes along a straight line.
+ * Holes are placed on the line from (x0,y0) to (x1,y1); endpoints may be
+ * excluded to avoid duplicates at joins. Returns number of holes placed. */
 static inline int stitch_line(plot_t *p, stitch_style_t s,
                               bool incl_start, bool incl_end,
                               float x0, float y0, float x1, float y1) {
@@ -79,7 +128,8 @@ static inline int stitch_line(plot_t *p, stitch_style_t s,
     return placed;
 }
 
-// Returns number of holes placed. Angles in degrees, 0=+x, positive clockwise.
+/* Draw pitch-matched stitch holes along a center+angle arc.
+ * Angles in degrees, 0=+x, positive clockwise. Returns number of holes placed. */
 static inline int stitch_arc(plot_t *p, stitch_style_t s,
                              bool incl_start, bool incl_end,
                              float cx, float cy, float r,
@@ -101,9 +151,9 @@ static inline int stitch_arc(plot_t *p, stitch_style_t s,
     return placed;
 }
 
-// Draws a line like vp_line, adds stitch holes on one side at style.inset.
-// material_left: when looking from start to end, holes are on the left.
-// Current point ends at (x,y).
+/* Draw a line from current point to (x,y), like vp_line, and add stitch holes
+ * at style.inset on one side. material_left: when facing start->end, holes are
+ * on the left. Leaves current point at (x,y). Returns number of holes placed. */
 static inline int lc_line_stitched(plot_t *p, stitch_style_t style,
                                    bool incl_start, bool incl_end,
                                    float x, float y, bool material_left) {
@@ -114,10 +164,7 @@ static inline int lc_line_stitched(plot_t *p, stitch_style_t style,
     float dx = x - x0;
     float dy = y - y0;
     float len = sqrtf(dx * dx + dy * dy);
-    int n = (int)roundf(len / style.pitch);
-    if (n < 1) n = 1;
 
-    // Left normal in y-down visual coords: (dy,-dx) normalized.
     float ndx = 0.0f, ndy = -1.0f;
     if (len > 0.0f) {
         ndx = dy / len;
@@ -128,20 +175,13 @@ static inline int lc_line_stitched(plot_t *p, stitch_style_t style,
         ndy = -ndy;
     }
 
+    float hx0 = x0 + ndx * style.inset;
+    float hy0 = y0 + ndy * style.inset;
+    float hx1 = x  + ndx * style.inset;
+    float hy1 = y  + ndy * style.inset;
+
     cairo_path_t *saved = cairo_copy_path(p->cr);
-
-    int placed = 0;
-    float hr = style.hole_d * 0.5f;
-    for (int i = 0; i <= n; i++) {
-        if (i == 0 && !incl_start) continue;
-        if (i == n && !incl_end) continue;
-        float t = (float)i / (float)n;
-        float pxp = x0 + dx * t + ndx * style.inset;
-        float pyp = y0 + dy * t + ndy * style.inset;
-        vp_circle(p, pxp, pyp, hr);
-        placed++;
-    }
-
+    int placed = stitch_line(p, style, incl_start, incl_end, hx0, hy0, hx1, hy1);
     cairo_new_path(p->cr);
     cairo_append_path(p->cr, saved);
     cairo_path_destroy(saved);
@@ -150,7 +190,7 @@ static inline int lc_line_stitched(plot_t *p, stitch_style_t style,
     return placed;
 }
 
-// Relative variant: endpoint is (current_x + dx, current_y + dy).
+/* Relative variant of lc_line_stitched; endpoint is current point + (dx,dy). */
 static inline int lc_line_stitched_rel(plot_t *p, stitch_style_t style,
                                        bool incl_start, bool incl_end,
                                        float dx, float dy, bool material_left) {
@@ -160,7 +200,8 @@ static inline int lc_line_stitched_rel(plot_t *p, stitch_style_t style,
                             (float)x0d + dx, (float)y0d + dy, material_left);
 }
 
-// 0 deg = SE, positive clockwise (y-down).
+/* Draw a buttonhole: circle at (cx,cy) plus a slit.
+ * angle_deg=0 points SE; positive clockwise (y-down). */
 static inline void vp_buttonhole(plot_t *p,
                                  float cx, float cy, float angle_deg,
                                  float hole_d, float slit_len) {
@@ -173,6 +214,7 @@ static inline void vp_buttonhole(plot_t *p,
     vp_stroke(p);
 }
 
+/* Return an empty/invalid bend_corner_t (used on arc geometry errors). */
 static inline bend_corner_t lc_bend_corner_zero(void) {
     bend_corner_t bc;
     bc.cx = 0; bc.cy = 0;
@@ -185,10 +227,9 @@ static inline bend_corner_t lc_bend_corner_zero(void) {
     return bc;
 }
 
-// Like vp_arc: draws arc from current point to (x,y), using endpoint-based
-// radius/cw/large_arc semantics. Additionally plots stitch holes at
-// stitch_r = r - style.inset and returns a bend_corner_t for lc_bend_strip.
-// Current point ends at (x,y), like vp_arc.
+/* Draw an endpoint-based arc like vp_arc, plus stitch holes at
+ * stitch_r = r - style.inset. Returns bend_corner_t for lc_bend_strip.
+ * Leaves current point at (x,y). */
 static inline bend_corner_t lc_arc_stitched(plot_t *p, stitch_style_t style,
                                             bool incl_start, bool incl_end,
                                             float x, float y, float r,
@@ -236,8 +277,7 @@ static inline bend_corner_t lc_arc_stitched(plot_t *p, stitch_style_t style,
     bc.a0_deg = lc_rad_to_deg((float)a1);
     bc.a1_deg = lc_rad_to_deg((float)a2);
 
-    // Sweep in the direction actually drawn.
-    float sweep = (float)(a2 - a1); // radians, signed in cairo math coords
+    float sweep = (float)(a2 - a1);
     bc.theta_deg = fabsf(lc_rad_to_deg(sweep));
     float theta = fabsf(sweep);
 
@@ -249,10 +289,9 @@ static inline bend_corner_t lc_arc_stitched(plot_t *p, stitch_style_t style,
     bc.p_s = l_s / (float)bc.n;
     float l_o = bc.external_r * theta;
     bc.p_o = l_o / (float)bc.n;
-    bc.co2 = bc.p_o - bc.p_s;               // = style.inset * theta / n
-    bc.co1 = bc.p_o * 0.5f - bc.co2;        // = p_s - p_o/2
+    bc.co2 = bc.p_o - bc.p_s;
+    bc.co1 = bc.p_o * 0.5f - bc.co2;
 
-    // Stitch holes first; they use their own paths, so preserve current path.
     cairo_path_t *saved = cairo_copy_path(p->cr);
     stitch_arc(p, style, incl_start, incl_end, bc.cx, bc.cy, bc.stitch_r,
                bc.a0_deg, bc.a1_deg);
@@ -260,15 +299,17 @@ static inline bend_corner_t lc_arc_stitched(plot_t *p, stitch_style_t style,
     cairo_append_path(p->cr, saved);
     cairo_path_destroy(saved);
 
-    // Draw the arc exactly like vp_arc, leaving current point at endpoint.
     vp_arc(p, x, y, r, cw, large_arc);
 
     return bc;
 }
 
-// Extends current path with a bend-strip notch profile, starting at current
-// point. Holes are drawn as separate paths; outline path is preserved.
-// ts is fixed to 1.5 * style.inset. Ends with current point at strip end.
+/* Extend current path with a bend-strip notch profile starting at current point.
+ * Use bend_corner_t from lc_arc_stitched for matching hole count/spacing.
+ * azimuth_deg: travel direction (0=+x, positive clockwise).
+ * material_left: when facing azimuth, material/notches are on the left.
+ * Draws holes as separate stroked paths; outline remains unstroked with current
+ * point at strip end. Notch depth ts is fixed to 1.5 * style.inset. */
 static inline void lc_bend_strip(plot_t *p, const bend_corner_t *bc,
                                  float azimuth_deg, bool material_left) {
     double x0d, y0d;
@@ -288,7 +329,6 @@ static inline void lc_bend_strip(plot_t *p, const bend_corner_t *bc,
     float ts = 1.5f * s;
     float hr = bc->style.hole_d * 0.5f;
 
-    // Preserve current path across hole drawing.
     cairo_path_t *saved = cairo_copy_path(p->cr);
 
     for (int i = 0; i <= bc->n; i++) {
@@ -302,7 +342,6 @@ static inline void lc_bend_strip(plot_t *p, const bend_corner_t *bc,
     cairo_append_path(p->cr, saved);
     cairo_path_destroy(saved);
 
-    // Notch outline: co1 flat, co2 ramp in, co2 ramp out, co1 flat per interval.
     float u = 0.0f;
     for (int i = 0; i < bc->n; i++) {
         u += bc->co1;
@@ -317,7 +356,6 @@ static inline void lc_bend_strip(plot_t *p, const bend_corner_t *bc,
         u += bc->co1;
         vp_line(p, x + fdx * u, y + fdy * u);
     }
-    // Current point is now at strip end; path remains unstroked.
 }
 
 #endif
