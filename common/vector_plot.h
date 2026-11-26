@@ -232,5 +232,11 @@ static inline void vp_arc_rel(plot_t *p, float dx, float dy, float r, bool cw, b
     vp_arc(p, x0 + dx, y0 + dy, r, cw, large_arc);
 }
 
+/* Draw a cubic Bezier segment from the current point to (x,y) with control
+ * points (x1,y1) and (x2,y2). Mirrors cairo_curve_to. */
+static inline void vp_curve(plot_t *p, float x1, float y1, float x2, float y2, float x, float y) {
+    cairo_curve_to(p->cr, x1, y1, x2, y2, x, y);
+}
+
 
 #endif

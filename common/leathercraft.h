@@ -151,6 +151,72 @@ static inline int stitch_arc(plot_t *p, stitch_style_t s,
     return placed;
 }
 
+/* Evaluate a cubic Bezier point at parameter t in [0,1].
+ * P0 = start, P1/P2 = control points, P3 = end. */
+static inline void lc_bezier(float t, float x0, float y0, float x1, float y1,
+                             float x2, float y2, float x, float y,
+                             float *ox, float *oy) {
+    float u = 1.0f - t;
+    float u2 = u * u;
+    float u3 = u2 * u;
+    float t2 = t * t;
+    float t3 = t2 * t;
+    *ox = u3 * x0 + 3.0f * u2 * t * x1 + 3.0f * u * t2 * x2 + t3 * x;
+    *oy = u3 * y0 + 3.0f * u2 * t * y1 + 3.0f * u * t2 * y2 + t3 * y;
+}
+
+/* Draw pitch-matched stitch holes along a cubic Bezier curve, like stitch_line.
+ * Curve starts at (x0,y0); control points (x1,y1) and (x2,y2); end (x,y).
+ * Holes are placed at equal arc-length intervals. Returns number of holes placed. */
+static inline int stitch_curve(plot_t *p, stitch_style_t s,
+                               bool incl_start, bool incl_end,
+                               float x0, float y0, float x1, float y1,
+                               float x2, float y2, float x, float y) {
+    const int NS = 10000;
+    float L[NS + 1];
+    L[0] = 0.0f;
+    float px = x0, py = y0;
+    for (int i = 1; i <= NS; i++) {
+        float t = (float)i / (float)NS;
+        float qx, qy;
+        lc_bezier(t, x0, y0, x1, y1, x2, y2, x, y, &qx, &qy);
+        float dx = qx - px, dy = qy - py;
+        L[i] = L[i - 1] + sqrtf(dx * dx + dy * dy);
+        px = qx;
+        py = qy;
+    }
+
+    float len = L[NS];
+    int n = (int)roundf(len / s.pitch);
+    if (n < 1) n = 1;
+
+    int placed = 0;
+    float hr = s.hole_d * 0.5f;
+    for (int i = 0; i <= n; i++) {
+        if (i == 0 && !incl_start) continue;
+        if (i == n && !incl_end) continue;
+        float target = len * (float)i / (float)n;
+
+        int lo = 0, hi = NS;
+        while (lo < hi) {
+            int mid = (lo + hi) / 2;
+            if (L[mid] < target) lo = mid + 1;
+            else hi = mid;
+        }
+        int j = lo;
+        if (j < 1) j = 1;
+        float seg = L[j] - L[j - 1];
+        float frac = (seg > 0.0f) ? (target - L[j - 1]) / seg : 0.0f;
+        float t = ((float)(j - 1) + frac) / (float)NS;
+
+        float qx, qy;
+        lc_bezier(t, x0, y0, x1, y1, x2, y2, x, y, &qx, &qy);
+        vp_circle(p, qx, qy, hr);
+        placed++;
+    }
+    return placed;
+}
+
 /* Draw a line from current point to (x,y), like vp_line, and add stitch holes
  * at style.inset on one side. material_left: when facing start->end, holes are
  * on the left. Leaves current point at (x,y). Returns number of holes placed. */
@@ -198,6 +264,88 @@ static inline int lc_line_stitched_rel(plot_t *p, stitch_style_t style,
     cairo_get_current_point(p->cr, &x0d, &y0d);
     return lc_line_stitched(p, style, incl_start, incl_end,
                             (float)x0d + dx, (float)y0d + dy, material_left);
+}
+
+/* Draw a cubic Bezier curve from current point to (x,y), like vp_curve, and
+ * add stitch holes at style.inset on one side. material_left: when facing
+ * start->end, holes are on the left. Holes are placed at equal arc-length
+ * intervals. Leaves current point at (x,y). Returns number of holes placed.
+ *
+ * Not composed from vp_curve+stitch_curve: a constant-distance offset of a
+ * cubic Bezier is not a cubic Bezier, so holes are placed at B(t)+inset*N(t)
+ * using the arc-length LUT and B'(t) for normals. */
+static inline int lc_curve_stitched(plot_t *p, stitch_style_t style,
+                                    bool incl_start, bool incl_end,
+                                    float x1, float y1, float x2, float y2,
+                                    float x, float y, bool material_left) {
+    double x0d, y0d;
+    cairo_get_current_point(p->cr, &x0d, &y0d);
+    float x0 = (float)x0d, y0 = (float)y0d;
+
+    const int NS = 10000;
+    float L[NS + 1];
+    L[0] = 0.0f;
+    float px = x0, py = y0;
+    for (int i = 1; i <= NS; i++) {
+        float t = (float)i / (float)NS;
+        float qx, qy;
+        lc_bezier(t, x0, y0, x1, y1, x2, y2, x, y, &qx, &qy);
+        float dx = qx - px, dy = qy - py;
+        L[i] = L[i - 1] + sqrtf(dx * dx + dy * dy);
+        px = qx;
+        py = qy;
+    }
+
+    float len = L[NS];
+    int n = (int)roundf(len / style.pitch);
+    if (n < 1) n = 1;
+
+    cairo_path_t *saved = cairo_copy_path(p->cr);
+    int placed = 0;
+    float hr = style.hole_d * 0.5f;
+    for (int i = 0; i <= n; i++) {
+        if (i == 0 && !incl_start) continue;
+        if (i == n && !incl_end) continue;
+        float target = len * (float)i / (float)n;
+
+        int lo = 0, hi = NS;
+        while (lo < hi) {
+            int mid = (lo + hi) / 2;
+            if (L[mid] < target) lo = mid + 1;
+            else hi = mid;
+        }
+        int j = lo;
+        if (j < 1) j = 1;
+        float seg = L[j] - L[j - 1];
+        float frac = (seg > 0.0f) ? (target - L[j - 1]) / seg : 0.0f;
+        float t = ((float)(j - 1) + frac) / (float)NS;
+
+        float qx, qy;
+        lc_bezier(t, x0, y0, x1, y1, x2, y2, x, y, &qx, &qy);
+
+        float u = 1.0f - t;
+        float tx = 3.0f * u * u * (x1 - x0) + 6.0f * u * t * (x2 - x1) + 3.0f * t * t * (x - x2);
+        float ty = 3.0f * u * u * (y1 - y0) + 6.0f * u * t * (y2 - y1) + 3.0f * t * t * (y - y2);
+        float tl = sqrtf(tx * tx + ty * ty);
+        float ndx = 0.0f, ndy = -1.0f;
+        if (tl > 0.0f) {
+            ndx = ty / tl;
+            ndy = -tx / tl;
+        }
+        if (!material_left) {
+            ndx = -ndx;
+            ndy = -ndy;
+        }
+
+        vp_circle(p, qx + ndx * style.inset, qy + ndy * style.inset, hr);
+        placed++;
+    }
+    cairo_new_path(p->cr);
+    cairo_append_path(p->cr, saved);
+    cairo_path_destroy(saved);
+
+    vp_curve(p, x1, y1, x2, y2, x, y);
+    return placed;
 }
 
 /* Draw a buttonhole: circle at (cx,cy) plus a slit.
