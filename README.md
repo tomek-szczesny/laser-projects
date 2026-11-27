@@ -13,6 +13,7 @@ This repository includes C (Cairo-based) vector generators, SVG/Boxes.py-based d
 - `pindelex/` — legacy design of smaczex (C)
 - `bateriex/` — parametric battery organizer board generator (C)
 - `nakladex/` — parametric generator of cases for clip-on sunglasses (and other flat things) (C)
+- `kostex/` — parametric generator for a drawstring bourse for RPG dice (C)
 - `sock-jig/` — parametric sock-jig outline generator (C)
 - `szufladex/` — modular storage/drawer system (SVG/Boxes.py-based design files)
 - `rozen-box/` — case for my PC, based on a laptop motherboard (SVG/Boxes.py-based design files)
